@@ -1,0 +1,166 @@
+function [Energy,kpath,kk]=get_bulk_bands_bcd(obj,hkpoints,nk)
+    a=obj.a;
+    b=obj.b;
+    hamiltonian=obj.ham;
+    hopping_r=obj.hopr;
+    nbands=size(hamiltonian,1);
+    nrpts=size(hopping_r,1)
+    kTrans=@(x)x(1)*b(1,:)+x(2)*b(2,:)+x(3)*b(3,:); %This can be done b'*hk'
+    kPoints=@(startPoint,endPoint,numPoints)...
+        [linspace(startPoint(1),endPoint(1),numPoints)',...
+        linspace(startPoint(2),endPoint(2),numPoints)',...
+        linspace(startPoint(3),endPoint(3),numPoints)'...
+        ];
+    hkpoints2=cell(1,length(hkpoints));
+    for i=1:length(hkpoints)
+        hkpoints2(i)={kTrans(hkpoints{i})};
+    end
+
+    kpoints=[];
+    for i=1:length(hkpoints2)-1
+        kpoints=[kpoints;kPoints(hkpoints2{i},hkpoints2{i+1},nk)];
+        kpoints(end,:)=[];
+    end
+    kpoints=[kpoints;kTrans(hkpoints{end})];
+    
+    kpath=zeros(1,length(kpoints));
+    kpath(1)=0;
+    for i=2:length(kpoints)
+        temp=kpath(i-1);
+        kpath(i)=norm(kpoints(i,:)-kpoints(i-1,:))+temp;
+    end
+    kk=zeros(1,length(hkpoints2));
+    for i=1:length(hkpoints2)
+        temp=(i-1)*(nk-1)+1;
+        kk(i)=kpath(temp);
+    end
+
+    %%solve the Hamiltonian(k)
+    % hamiltonian=reshape(hamiltonian,nbands*nbands,nrpts);
+    enktem=zeros(length(kpoints),nbands);
+    unktem=zeros(nbands,nbands,length(kpoints));
+    enktem_dk=zeros(length(kpoints),nbands);
+    parfor i=1:length(kpoints)
+        knum=301;
+        dkx=obj.b(1,:)/knum;
+        dky=obj.b(2,:)/knum;
+        dS=norm(dkx)*norm(dky);
+
+        kpoint=kpoints(i,:);
+        hk=get_hk(hamiltonian,hopping_r,nbands,nrpts,kpoint,a);
+        % ishermitian(hk)
+
+        [V,D]=eig(hk);
+        [Etem,ind]=sort(diag(D));
+        psi=V(:,ind);
+        Energy(:,i)=Etem;
+        enktem(i,:)=Etem;
+        unktem(:,:,i)=psi;
+
+        kpoint=kpoints(i,:)+dkx;
+        hk=get_hk(hamiltonian,hopping_r,nbands,nrpts,kpoint,a);
+        % ishermitian(hk)
+        knum=301;
+        [V,D]=eig(hk);
+        [Etem,ind]=sort(diag(D));
+        psi=V(:,ind);
+        enktem_dk(i,:)=Etem;
+
+        nsbands=size(bandindex,2);
+        itotal=knum;
+        qm=@MTB.ham.get_quan_metric;
+        delta=0.001;
+        for j=1:size(bandindex,2)
+            band=bandindex(j);
+            omega(i,j)=-2.*imag(qm(obj,k,dkx,dky,unktem(:,:,i),Energy(:,i),band,delta));
+        end
+
+    end
+end
+% 
+% function hk=get_hk(hamiltonian,hopping_r,nbands,nrpts,kpoint,a)
+%     hk=zeros(nbands,nbands);
+%     for j=1:nrpts
+%         temp=hamiltonian(:,:,j)*...
+%         exp(1j*dot(kpoint,(hopping_r(j,:)*a))); 
+%         hk=hk+temp;
+%     end
+% end
+
+function hk=get_hk(hamiltonian,hopping_r,nbands,nrpts,kpoint,a)
+    hamiltonian=reshape(hamiltonian,nbands*nbands,nrpts);
+    hk=hamiltonian*exp(1j*((hopping_r*a)*kpoint'));
+    hk=reshape(hk,nbands,nbands);
+    hk=(hk+hk')/2.0;
+end
+
+
+
+function [Unk,Enk]=get_bulk_bands_bcd_add_electric(obj,Electric_field_in_evpA,Kx,Ky,Kz)
+% Slove the Hamiltonian on the K-mesh 
+    % obj: The object of the continuum model system
+    % Kx,Ky,Kz: the k-mesh we will solve
+    % dim_H: num of the bands/orbits
+    % Unk: Norbits*Nands*knum*knum
+    % Enk: knum*knum*Nbands
+    knum=size(Kx,1);
+    % Unk=zeros(dim_H,dim_H,knum,knum);
+    % Enk=zeros(knum,knum,dim_H);
+    itotal=knum^2;
+    dim_H=size(obj.ham,1);
+    nrpts=size(obj.ham,3);
+    unktem=zeros(dim_H,dim_H,itotal);
+    enktem=zeros(itotal,dim_H);
+    hamiltonian=obj.ham;
+    hopping_r=obj.hopr;
+    wpos=obj.wpos;
+    a=obj.a;
+    qm=@MTB.ham.get_quan_metric;
+    dkx=obj.b(1,:)/knum;
+    dky=obj.b(2,:)/knum;
+    dS=norm(dkx)*norm(dky);
+    parfor ll=1:itotal
+        [i,j]=ind2sub([knum,knum],ll);
+        kpoint=[Kx(i,j),Ky(i,j),Kz(i,j)];
+        fprintf("Processing on %d %d of %d KPOINTS\n", i, j, itotal);
+        hk=get_hk(hamiltonian,hopping_r,wpos,Electric_field_in_evpA,dim_H,nrpts,kpoint,a);
+        [V,D]=eig(hk);
+        [Etem,ind]=sort(diag(D));
+        psi=V(:,ind);
+        enktem(ll,:)=Etem;
+        unktem(:,:,ll)=psi;
+        
+        omega(ll)=-2.*imag(qm(obj,k,dkx,dky,Unk(:,:,i,j),reshape(Enk(i,j,:),[dimH,1]),band,delta));
+
+    end
+    Unk=reshape(unktem,[dim_H,dim_H,knum,knum]);
+    Enk=reshape(enktem,[knum,knum,dim_H]);
+end
+
+function hk=get_hk(hamiltonian,hopping_r,wpos,Electric_field_in_evpA,nbands,nrpts,kpoint,a)
+    hamiltonian=reshape(hamiltonian,nbands*nbands,nrpts);
+    hk=hamiltonian*exp(1j*((hopping_r*a)*kpoint'));
+    hk=reshape(hk,nbands,nbands);
+    hke=hk_add_elec(wpos,nbands,Electric_field_in_evpA);
+    hk=hk+hke;
+    hk=(hk+hk')./2;
+end
+
+
+function hke=hk_add_elec(wpos,dim_H,Electric_field_in_evpA)
+    % wpos=round(wpos);
+    hke=zeros(dim_H,dim_H);
+    minrz=min(wpos(:,3));
+    maxrz=max(wpos(:,3));
+    rz=(minrz+maxrz)/2.0;
+    wpos(:,3)=wpos(:,3)-rz;
+    for i = 1:dim_H
+        hke(i,i)=wpos(i,3)*Electric_field_in_evpA;
+    end 
+    hke
+end
+
+% function hke=hk_add_elec(wpos,Electric_field_in_evpA)
+%     wpos=(wpos(:,3)-(min(wpos(:,3))+max(wpos(:,3)))/2.0)*Electric_field_in_evpA;
+%     hke=diag(wpos);
+% end
