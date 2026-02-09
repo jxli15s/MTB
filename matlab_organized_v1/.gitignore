@@ -1,0 +1,270 @@
+# Git Ignore File for MATLAB Condensed Matter Physics Project
+# Created: 2025-02-09
+
+# ============================================
+# MATLAB Specific Files
+# ============================================
+
+# MATLAB temporary and backup files
+*.asv
+*.m~
+*.swp
+*~
+*.bak
+*.backup
+
+# MATLAB autosave
+*.autosave
+
+# ============================================
+# Data Files (Usually Too Large for Git)
+# ============================================
+
+# MATLAB data files
+*.mat
+*.dat
+*.h5
+*.hdf5
+
+# Text data files (if large)
+*.csv
+*.txt
+
+# Binary data
+*.bin
+
+# Exceptions: Keep small example data
+!example_data.mat
+!demo_*.mat
+
+# ============================================
+# Generated Figures and Images
+# ============================================
+
+# Image formats
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tif
+*.tiff
+
+# MATLAB figures
+*.fig
+
+# Vector graphics
+*.eps
+*.svg
+*.pdf
+
+# Exceptions: Keep key figures in documentation
+!docs/figures/*.png
+!README_figures/*.png
+
+# ============================================
+# Compressed Archives
+# ============================================
+
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ============================================
+# System Files
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ============================================
+# IDE and Editor Files
+# ============================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# MATLAB
+*.mlx~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ============================================
+# Build and Compilation Artifacts
+# ============================================
+
+# MEX files (compiled MATLAB)
+*.mex*
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Object files
+*.obj
+
+# ============================================
+# Data Directories (Symlinks or Large Data)
+# ============================================
+
+# Main data folder (symlink in this project)
+data/
+*/data/
+**/data/
+
+# Wannier90 outputs (can be large)
+*_hr.dat
+wannier90_hr.dat
+
+# VASP files (if present)
+POSCAR.bak
+OUTCAR*
+vasprun.xml
+WAVECAR
+CHG*
+
+# Quantum ESPRESSO files
+*.save/
+*.wfc*
+
+# ============================================
+# Temporary and Log Files
+# ============================================
+
+*.log
+*.tmp
+*.temp
+*.cache
+
+# MATLAB diary
+diary
+diary.*
+
+# ============================================
+# Project-Specific Large Files
+# ============================================
+
+# Quantum geometry data (usually large)
+Omega_*.mat
+Enk_*.mat
+Unk_*.mat
+*_k_all*.mat
+
+# HFMF iteration data
+*_iter_*.mat
+HF_*.mat
+
+# Band structure data
+*_bands_*.dat
+*_bands_*.mat
+
+# DOS data
+*_dos_*.mat
+*_dos_*.dat
+
+# ============================================
+# Directories to Ignore
+# ============================================
+
+# Old versions
+old/
+backup/
+archive/
+
+# Temporary work
+tmp/
+temp/
+
+# Personal scratch space
+scratch/
+test_*_temp/
+
+# Collaboration folders (if not needed in main repo)
+for_*/
+fordavid/
+forlouis/
+forxiaojun/
+forylshen/
+forjian/
+forhaotian/
+
+# ============================================
+# Keep Important Empty Directories
+# ============================================
+
+# Keep directory structure but ignore contents
+# Use this pattern:
+# directory_name/*
+# !directory_name/.gitkeep
+
+# ============================================
+# Exceptions (Files to Keep)
+# ============================================
+
+# Keep certain important data files
+!example_data/
+!tutorials/data/*.mat
+
+# Keep documentation figures
+!docs/**/*.png
+!docs/**/*.pdf
+
+# Keep README images
+!**/README_*.png
+
+# ============================================
+# Notes
+# ============================================
+
+# This .gitignore is designed for a MATLAB-based
+# condensed matter physics tight-binding project
+# with the following considerations:
+#
+# 1. Excludes large data files (*.mat, *.dat)
+# 2. Excludes generated figures
+# 3. Excludes temporary and backup files
+# 4. Keeps the code and documentation
+# 5. Uses symlinks for large data folders
+#
+# Adjust as needed for your specific workflow
